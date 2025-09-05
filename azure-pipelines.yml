@@ -20,7 +20,16 @@ stages:
               provider: 'azurerm'
               command: 'validate'
       - job: TerraformPlan
+
         steps:
+          - task: TerraformTask@5
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'hamara-sc'
+              backendAzureRmStorageAccountName: 'narottamstorageacct12346'
+              backendAzureRmContainerName: 'mycontainer'
+              backendAzureRmKey: 'terraform.tfstate'
           - task: TerraformTask@5
             inputs:
               provider: 'azurerm'
