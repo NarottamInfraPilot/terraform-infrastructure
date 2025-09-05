@@ -8,6 +8,7 @@ stages:
         displayName: Terraform Init and validate karna hai
         steps:
           - task: TerraformTask@5
+            displayName: terraform init bhai
             inputs:
               provider: 'azurerm'
               command: 'init'
@@ -16,13 +17,17 @@ stages:
               backendAzureRmContainerName: 'mycontainer'
               backendAzureRmKey: 'terraform.tfstate'
           - task: TerraformTask@5
+            displayName: terraform validate
             inputs:
               provider: 'azurerm'
               command: 'validate'
       - job: TerraformPlan
+        displayName: terraform init or plan
 
         steps:
+        
           - task: TerraformTask@5
+            displayName: terraform init
             inputs:
               provider: 'azurerm'
               command: 'init'
@@ -31,6 +36,7 @@ stages:
               backendAzureRmContainerName: 'mycontainer'
               backendAzureRmKey: 'terraform.tfstate'
           - task: TerraformTask@5
+            displayName: terraform plan
             inputs:
               provider: 'azurerm'
               command: 'plan'
