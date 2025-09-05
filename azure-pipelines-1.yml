@@ -50,8 +50,21 @@ stages:
     displayName: Terraform Apply with Approval
     dependsOn: TerraformInitValidatePlan
     jobs:
+
       - job: PreApplyApproval
         displayName: Manual Approval Before Apply
+        pool: server  # Agentless job for ManualValidation
+        steps:
+          - task: ManualValidation@1
+            displayName: Wait for Approval
+            inputs:
+              notifyUsers: 'narottamkumarsaw1999@gmail.com'
+              approvers: 'narottamkumarsaw1999@gmail.com'
+
+      - job: TerraformApply
+        displayName: Terraform Apply
+        dependsOn: PreApplyApproval
+        pool: humarapool
         steps:
           - task: TerraformTask@5
             displayName: Terraform Init (for Apply)
@@ -63,16 +76,6 @@ stages:
               backendAzureRmContainerName: 'mycontainer'
               backendAzureRmKey: 'terraform.tfstate'
 
-          - task: ManualValidation@1
-            displayName: Wait for Approval
-            inputs:
-              notifyUsers: 'narottamkumarsaw1999@gmail.com'
-              approvers: 'narottamkumarsaw1999@gmail.com'
-
-      - job: TerraformApply
-        displayName: Terraform Apply
-        dependsOn: PreApplyApproval
-        steps:
           - task: TerraformTask@5
             displayName: Apply Terraform Plan
             inputs:
