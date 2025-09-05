@@ -25,11 +25,10 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'validate'
-
-      - job: Plan
-        displayName: Terraform Plan
-        dependsOn: InitAndValidate
-        steps:
+          - task: tfsec@1
+            displayName: Run tfsec Scan
+            inputs:
+              version: 'v1.26.0'
           - task: TerraformTask@5
             displayName: Terraform Plan
             inputs:
@@ -37,14 +36,7 @@ stages:
               command: 'plan'
               environmentServiceNameAzureRM: 'hamara-sc'
 
-      - job: TfsecScan
-        displayName: Security Scan with tfsec
-        dependsOn: InitAndValidate
-        steps:
-          - task: tfsec@1
-            displayName: Run tfsec Scan
-            inputs:
-              version: 'v1.26.0'
+
 
   - stage: TerraformApply
     displayName: Terraform Apply with Approval
