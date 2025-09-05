@@ -1,0 +1,99 @@
+name: Simple Terraform Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  init-validate:
+    runs-on: ubuntu-latest
+    name: Terraform Init and Validate
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: terraform init bhai
+        run: terraform init \
+          -backend-config="storage_account_name=narottamstorageacct12346" \
+          -backend-config="container_name=mycontainer" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="resource_group_name=REPLACE_WITH_YOUR_RG" \
+          -backend-config="subscription_id=REPLACE_WITH_SUBSCRIPTION_ID"
+
+      - name: terraform validate
+        run: terraform validate
+
+  plan:
+    runs-on: ubuntu-latest
+    needs: init-validate
+    name: Terraform Plan
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: terraform init
+        run: terraform init \
+          -backend-config="storage_account_name=narottamstorageacct12346" \
+          -backend-config="container_name=mycontainer" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="resource_group_name=REPLACE_WITH_YOUR_RG" \
+          -backend-config="subscription_id=REPLACE_WITH_SUBSCRIPTION_ID"
+
+      - name: terraform plan
+        run: terraform plan
+
+  tfsec-scan:
+    runs-on: ubuntu-latest
+    needs: plan
+    name: tfsec Security Scan
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install tfsec
+        run: |
+          curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+          tfsec .
+
+  apply:
+    runs-on: ubuntu-latest
+    needs: tfsec-scan
+    name: Terraform Apply (Manual Trigger Only)
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: terraform init karna padega apply se pehle
+        run: terraform init \
+          -backend-config="storage_account_name=narottamstorageacct12346" \
+          -backend-config="container_name=mycontainer" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="resource_group_name=REPLACE_WITH_YOUR_RG" \
+          -backend-config="subscription_id=REPLACE_WITH_SUBSCRIPTION_ID"
+
+      - name: terraform apply karo bhai
+        run: terraform apply -auto-approve
