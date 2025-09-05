@@ -1,0 +1,81 @@
+trigger: none
+
+pool: humarapool
+
+stages:
+  - stage: TerraformInitValidatePlan
+    displayName: Init, Validate, Plan, and Scan
+    jobs:
+
+      - job: InitAndValidate
+        displayName: Terraform Init and Validate
+        steps:
+          - task: TerraformTask@5
+            displayName: Terraform Init
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'hamara-sc'
+              backendAzureRmStorageAccountName: 'narottamstorageacct12346'
+              backendAzureRmContainerName: 'mycontainer'
+              backendAzureRmKey: 'terraform.tfstate'
+
+          - task: TerraformTask@5
+            displayName: Terraform Validate
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+
+      - job: Plan
+        displayName: Terraform Plan
+        dependsOn: InitAndValidate
+        steps:
+          - task: TerraformTask@5
+            displayName: Terraform Plan
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'hamara-sc'
+
+      - job: TfsecScan
+        displayName: Security Scan with tfsec
+        dependsOn: InitAndValidate
+        steps:
+          - task: tfsec@1
+            displayName: Run tfsec Scan
+            inputs:
+              version: 'v1.26.0'
+
+  - stage: TerraformApply
+    displayName: Terraform Apply with Approval
+    dependsOn: TerraformInitValidatePlan
+    jobs:
+      - job: PreApplyApproval
+        displayName: Manual Approval Before Apply
+        steps:
+          - task: TerraformTask@5
+            displayName: Terraform Init (for Apply)
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'hamara-sc'
+              backendAzureRmStorageAccountName: 'narottamstorageacct12346'
+              backendAzureRmContainerName: 'mycontainer'
+              backendAzureRmKey: 'terraform.tfstate'
+
+          - task: ManualValidation@1
+            displayName: Wait for Approval
+            inputs:
+              notifyUsers: 'narottamkumarsaw1999@gmail.com'
+              approvers: 'narottamkumarsaw1999@gmail.com'
+
+      - job: TerraformApply
+        displayName: Terraform Apply
+        dependsOn: PreApplyApproval
+        steps:
+          - task: TerraformTask@5
+            displayName: Apply Terraform Plan
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              environmentServiceNameAzureRM: 'hamara-sc'
