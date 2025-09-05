@@ -41,3 +41,7 @@ stages:
               provider: 'azurerm'
               command: 'plan'
               environmentServiceNameAzureRM: 'hamara-sc'
+      - job: scanning
+        displayName: scan karna hai bhai tfsec se
+        steps:
+          
