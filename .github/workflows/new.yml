@@ -1,0 +1,10 @@
+name: my pipeline
+on: workflow_dispatch
+jobs:
+  my_first_job:
+    name: My first job
+    runs-on: [humararunner]
+    steps:
+    - run: echo Hello world!
+    - run: ls -lart
+    - run: pwd
